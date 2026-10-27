@@ -28,6 +28,8 @@ dependencies:
   
   # Local storage
   shared_preferences: ^2.2.2
+  sqflite: ^2.3.0
+  url_launcher: ^6.3.1
   
   # JSON serialization
   json_annotation: ^4.8.1

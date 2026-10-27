@@ -4,6 +4,7 @@ import uuid
 from ..models.vocabulary import ConversationSession, ConversationMessage
 from src.models import db             # <-- 从中央位置导入 db
 from ..services.conversation_ai import conversation_ai_service
+from ..services.tutor_graph import tutor_service
 
 '''
 这是一个写得非常好的 API 蓝图，它清晰地定义了与对话会话（Session）相关的所有 CRUD 操作（创建、读取、更新/在这里是发送消息、删除）。
@@ -77,17 +78,27 @@ def send_message(session_id):
             timestamp=datetime.utcnow()
         )
         db.session.add(user_msg)
-        
-        # 生成AI回复
-        session_context = {
-            'session_id': session_id,
+        # 先提交用户消息：工具执行中若发生回滚，不会连带丢失这条消息
+        db.session.commit()
+
+        # 生成AI回复：由对话导师按需调用工具（看图、查词、单词本、复习记录）
+        scene = {
             'role': session.role,
             'theme': session.theme,
             'background': session.background
         }
-        
-        ai_response = conversation_ai_service.generate_ai_response(user_message, session_context)
-        
+        tool_trace = []
+        try:
+            ai_response, tool_trace = tutor_service.run_turn(
+                session_id, user_message, image_path=session.image_path, scene=scene)
+        except Exception as e:
+            # 模型服务不可用时退回到原有的单轮对话逻辑
+            print(f"Tutor turn failed, using fallback: {e}")
+            ai_response = ''
+        if not ai_response:
+            ai_response = conversation_ai_service.generate_ai_response(
+                user_message, {'session_id': session_id, **scene})
+
         # 保存AI回复
         ai_msg = ConversationMessage(
             session_id=session_id,
@@ -114,7 +125,9 @@ def send_message(session_id):
                 'sender': ai_msg.sender,
                 'message': ai_msg.message,
                 'timestamp': ai_msg.timestamp.isoformat() if ai_msg.timestamp else None
-            }
+            },
+            'tool_trace': [{k: v for k, v in t.items() if k != 'videos'} for t in tool_trace],
+            'videos': [v for t in tool_trace for v in t.get('videos') or []]
         })
         
     except Exception as e:
@@ -197,6 +210,10 @@ def delete_session(session_id):
         
         # 清除AI服务中的对话历史
         conversation_ai_service.clear_conversation_history(session_id)
+        try:
+            tutor_service.reset_session(session_id)
+        except Exception as e:
+            print(f"Failed to clear tutor history for {session_id}: {e}")
         
         db.session.commit()
         

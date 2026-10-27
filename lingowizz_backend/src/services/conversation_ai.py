@@ -18,8 +18,7 @@ class ConversationAIService:
     
     def __init__(self):
         # 优先使用智普AI的API Key
-        #self.zhipu_api_key = os.getenv('ZHIPU_API_KEY')
-        self.zhipu_api_key ="482802cba1a144518285e3fb10068f4d.9drwfXmNcnr25cIe"
+        self.zhipu_api_key = os.getenv('ZHIPU_API_KEY')
         self.conversation_history = {}  # 存储对话历史
 
         # 初始化智普AI客户端
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     print("=" * 50)
 
     # 1. 检查API Key是否设置
-    api_key = "482802cba1a144518285e3fb10068f4d.9drwfXmNcnr25cIe" # 直接硬编码
+    api_key = os.getenv('ZHIPU_API_KEY')
     if not api_key:
         print("\nERROR: ZHIPU_API_KEY environment variable is not set.")
         print("Please set it before running the test.")

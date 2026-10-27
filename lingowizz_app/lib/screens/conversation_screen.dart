@@ -4,14 +4,17 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
 import '../models/conversation.dart';
+import '../models/tool_activity.dart';
 import '../utils/app_theme.dart';
 import '../widgets/message_bubble.dart';
 import 'conversation_themes_screen.dart';
 
 class ConversationScreen extends StatefulWidget {
   final ConversationSession? session;
+  // 进入会话后自动发送的第一条消息（如 Practice Quiz 的 "Quiz me"）
+  final String? initialMessage;
 
-  const ConversationScreen({super.key, this.session});
+  const ConversationScreen({super.key, this.session, this.initialMessage});
 
   @override
   State<ConversationScreen> createState() => _ConversationScreenState();
@@ -26,13 +29,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
   ConversationSession? _currentSession;
   bool _isLoading = false;
   bool _isSending = false;
+  // AI 回复的消息 id → 这一轮调用过的工具、推荐的视频
+  final Map<int, List<ToolCall>> _toolCalls = {};
+  final Map<int, List<RecommendedVideo>> _videos = {};
 
   @override
   void initState() {
     super.initState();
     _currentSession = widget.session;
     if (_currentSession != null) {
-      _loadMessages();
+      _loadMessages().then((_) {
+        if (widget.initialMessage != null && mounted) {
+          _messageController.text = widget.initialMessage!;
+          _sendMessage();
+        }
+      });
     }
   }
 
@@ -255,6 +266,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         return MessageBubble(
           message: message,
           isUser: message.isUser,
+          toolCalls: _toolCalls[message.id] ?? const [],
+          videos: _videos[message.id] ?? const [],
         );
       },
     );
@@ -355,9 +368,19 @@ class _ConversationScreenState extends State<ConversationScreen> {
           await apiService.sendMessage(_currentSession!.sessionId, message);
 
       if (result['success']) {
+        final aiMessage = ConversationMessage.fromJson(result['ai_message']);
         setState(() {
           _messages.add(ConversationMessage.fromJson(result['user_message']));
-          _messages.add(ConversationMessage.fromJson(result['ai_message']));
+          _messages.add(aiMessage);
+          if (aiMessage.id != null) {
+            _toolCalls[aiMessage.id!] = (result['tool_trace'] as List? ?? [])
+                .map((t) => ToolCall.fromJson(t as Map<String, dynamic>))
+                .toList();
+            _videos[aiMessage.id!] = (result['videos'] as List? ?? [])
+                .map(
+                    (v) => RecommendedVideo.fromJson(v as Map<String, dynamic>))
+                .toList();
+          }
         });
 
         _messageController.clear();

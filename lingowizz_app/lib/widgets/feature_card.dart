@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class FeatureCard extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String subtitle;
   final Color color;
   final VoidCallback onTap;
 
@@ -11,7 +10,6 @@ class FeatureCard extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.color,
     required this.onTap,
   });
@@ -58,14 +56,7 @@ class FeatureCard extends StatelessWidget {
                 color: Color(0xFF1F2937),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF6B7280),
-              ),
-            ),
+
           ],
         ),
       ),

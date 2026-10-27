@@ -1,0 +1,11 @@
+# 本地密钥与环境
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# 本地数据库与运行产物
+lingowizz_backend/instance/
+lingowizz_backend/*.db
+lingowizz_backend/src/static/uploads/
+lingowizz_backend/eval/results/

@@ -73,3 +73,39 @@ class ConversationMessage(db.Model):
             'timestamp': self.timestamp.isoformat() if self.timestamp else None
         }
 
+
+class WordMastery(db.Model):
+    """单词掌握度：跨会话的长期学习记录（简化 Leitner 规则，等级 0-5）"""
+    __tablename__ = 'word_mastery'
+
+    MAX_LEVEL = 5
+
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String(100), unique=True, nullable=False)
+    level = db.Column(db.Integer, default=0, nullable=False)
+    review_count = db.Column(db.Integer, default=0, nullable=False)
+    correct_count = db.Column(db.Integer, default=0, nullable=False)
+    last_correct = db.Column(db.Boolean, nullable=True)
+    last_reviewed_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def record(self, correct: bool):
+        """记录一次复习：答对升一级，答错降一级"""
+        self.review_count = (self.review_count or 0) + 1
+        if correct:
+            self.correct_count = (self.correct_count or 0) + 1
+            self.level = min(self.MAX_LEVEL, (self.level or 0) + 1)
+        else:
+            self.level = max(0, (self.level or 0) - 1)
+        self.last_correct = correct
+        self.last_reviewed_at = datetime.utcnow()
+
+    def to_dict(self):
+        return {
+            'word': self.word,
+            'level': self.level,
+            'review_count': self.review_count,
+            'correct_count': self.correct_count,
+            'last_correct': self.last_correct,
+            'last_reviewed_at': self.last_reviewed_at.isoformat() if self.last_reviewed_at else None
+        }

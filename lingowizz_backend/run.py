@@ -26,9 +26,8 @@ if __name__ == '__main__':
     print(f"🚀 Starting LingoWizz Backend Server...")
     print(f"📍 Server will run on http://{host}:{port}")
     print(f"🔧 Debug mode: {debug}")
-    print(f"📊 Database: {'Configured' if os.getenv('DATABASE_URL') else 'Not configured'}")
-    print(f"🤖 OpenAI API: {'Configured' if os.getenv('OPENAI_API_KEY') else 'Not configured'}")
-    print(f"🤗 Hugging Face API: {'Configured' if os.getenv('HUGGINGFACE_API_KEY') else 'Not configured'}")
+    print(f"📊 Database: {'DATABASE_URL' if os.getenv('DATABASE_URL') else 'Local SQLite'}")
+    print(f"🤖 Zhipu API: {'Configured' if os.getenv('ZHIPU_API_KEY') else 'Not configured'}")
     print("-" * 50)
     
     # 启动Flask应用

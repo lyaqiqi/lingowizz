@@ -35,8 +35,7 @@ class ImageRecognitionService:
     
     def __init__(self):
         # 配置API密钥
-        #self.zhipu_api_key = os.getenv('ZHIPU_API_KEY', "482802cba1a144518285e3fb10068f4d.9drwfXmNcnr25cIe")
-        self.zhipu_api_key="482802cba1a144518285e3fb10068f4d.9drwfXmNcnr25cIe"
+        self.zhipu_api_key = os.getenv('ZHIPU_API_KEY')
         # --- 智普AI客户端初始化 ---
         self.zhipu_client = None
         if self.zhipu_api_key and ZhipuAI:

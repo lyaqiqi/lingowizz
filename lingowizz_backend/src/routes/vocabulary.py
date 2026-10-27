@@ -30,6 +30,15 @@ GET /vocabulary/export (export_vocabulary):
 
 vocabulary_bp = Blueprint('vocabulary', __name__)
 
+@vocabulary_bp.route('/learner/profile', methods=['GET'])
+def get_learner_profile():
+    """学习者画像：单词本规模、待复习的词、最近答错的词"""
+    from ..services.tutor_tools import build_learner_profile
+    try:
+        return jsonify({'success': True, 'profile': build_learner_profile()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @vocabulary_bp.route('/vocabulary', methods=['GET'])
 def get_vocabulary():
     """获取所有单词"""

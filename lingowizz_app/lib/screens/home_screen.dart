@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
+import '../models/conversation.dart';
+import '../services/api_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/feature_card.dart';
 import 'camera_screen.dart';
 import 'vocabulary_screen.dart';
 import 'conversation_screen.dart';
+import 'video_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -196,8 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: FeatureCard(
                 icon: Icons.book,
-                title: 'Vocabulary',
-                subtitle: 'Your word collection',
+                title: 'Words',
                 color: AppTheme.primaryColor,
                 onTap: () {
                   Navigator.push(
@@ -209,18 +212,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: FeatureCard(
                 icon: Icons.chat,
-                title: 'AI Chat',
-                subtitle: 'Practice conversations',
+                title: 'Chat',
                 color: AppTheme.secondaryColor,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ConversationScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FeatureCard(
+                icon: Icons.video_library,
+                title: 'Videos',
+                color: Colors.purple,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VideoScreen(),
                     ),
                   );
                 },
@@ -270,9 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icons.quiz,
           title: 'Practice Quiz',
           subtitle: 'Test your vocabulary knowledge',
-          onTap: () {
-            // TODO: Implement quiz feature
-          },
+          onTap: _startQuiz,
         ),
       ],
     );
@@ -319,6 +335,39 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: onTap,
       ),
     );
+  }
+
+  // 新建一个测验会话，由 AI 导师根据单词本中的薄弱词出题
+  Future<void> _startQuiz() async {
+    final quizTheme = ConversationTheme(
+      id: 0,
+      title: 'Vocabulary Quiz',
+      description: 'Review the words in your vocabulary book',
+      role: 'English Tutor',
+      background: 'The tutor quizzes the learner on words they have saved.',
+      scenario: 'vocabulary_quiz',
+    );
+    try {
+      final apiService = Provider.of<ApiService>(context, listen: false);
+      final session =
+          await apiService.createConversationSession(quizTheme, null);
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConversationScreen(
+            session: session,
+            initialMessage: 'Quiz me on my vocabulary!',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting quiz: $e')),
+        );
+      }
+    }
   }
 
   void _openCamera() {

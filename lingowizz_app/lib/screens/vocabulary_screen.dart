@@ -364,7 +364,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          item.segmentedImagePath!,
+                          ApiService.serverBaseUrl + item.segmentedImagePath!,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(

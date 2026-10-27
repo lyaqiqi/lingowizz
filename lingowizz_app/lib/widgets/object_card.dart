@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
+import '../services/api_service.dart';
 
 class ObjectCard extends StatelessWidget {
   final Map<String, dynamic> object;
@@ -15,7 +16,6 @@ class ObjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final confidence = (object['confidence'] * 100).toInt();
 
-    const String baseUrl = 'http://10.0.2.2:5000';
     final String? imagePath = object['segmented_image'];
 
     return Card(
@@ -36,7 +36,7 @@ class ObjectCard extends StatelessWidget {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        baseUrl + imagePath,
+                        ApiService.serverBaseUrl + imagePath,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           debugPrint('Image load error: $error');

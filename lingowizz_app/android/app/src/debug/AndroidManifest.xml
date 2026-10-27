@@ -4,4 +4,11 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 调试时连接本机后端（http://10.0.2.2:5000）需要允许明文 HTTP -->
+    <application android:usesCleartextTraffic="true">
+        <!-- Impeller 在 Android 模拟器上会出现画面不刷新，调试版改用 Skia 渲染 -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
+    </application>
 </manifest>

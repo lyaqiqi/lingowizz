@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/vocabulary_item.dart';
 import '../utils/app_theme.dart';
+import '../services/api_service.dart';
 
 class VocabularyCard extends StatelessWidget {
   final VocabularyItem vocabularyItem;
@@ -35,7 +36,8 @@ class VocabularyCard extends StatelessWidget {
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          vocabularyItem.segmentedImagePath!,
+                          ApiService.serverBaseUrl +
+                              vocabularyItem.segmentedImagePath!,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(

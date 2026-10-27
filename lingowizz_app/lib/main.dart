@@ -4,6 +4,7 @@ import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/vocabulary_screen.dart';
 import 'screens/conversation_screen.dart';
+import 'screens/video_screen.dart';
 import 'services/api_service.dart';
 import 'utils/app_theme.dart';
 
@@ -32,6 +33,7 @@ class LingoWizzApp extends StatelessWidget {
           '/home': (context) => const HomeScreen(),
           '/vocabulary': (context) => const VocabularyScreen(),
           '/conversation': (context) => const ConversationScreen(),
+          '/videos': (context) => const VideoScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),

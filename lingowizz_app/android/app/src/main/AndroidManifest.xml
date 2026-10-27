@@ -15,7 +15,7 @@
     <!-- 相机功能声明 -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="LingoWizz"
         android:name="${applicationName}"
@@ -51,5 +51,12 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <!-- Android 11+ 需要声明，才能用浏览器 / B 站 App 打开对话中推荐的视频链接 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 </manifest>
 

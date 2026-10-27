@@ -35,19 +35,23 @@ import sys
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+from dotenv import load_dotenv
+load_dotenv()  # 服务模块在导入时读取 ZHIPU_API_KEY，需先加载环境变量
+
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 #from src.models.user import db
 from src.models import db
 
-from src.models.vocabulary import VocabularyItem, ConversationSession, ConversationMessage
+from src.models.vocabulary import VocabularyItem, ConversationSession, ConversationMessage, WordMastery
 from src.routes.user import user_bp
 from src.routes.image_processing import image_bp
 from src.routes.vocabulary import vocabulary_bp
 from src.routes.conversation import conversation_bp
+from src.routes.video import video_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
 # 启用CORS支持
 CORS(app)
@@ -58,10 +62,13 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(image_bp, url_prefix='/api')
 app.register_blueprint(vocabulary_bp, url_prefix='/api')
 app.register_blueprint(conversation_bp, url_prefix='/api')
+app.register_blueprint(video_bp, url_prefix='/api')
 
 # 数据库配置
-# 使用PostgreSQL数据库
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://fang:Fang_strong_pass123@ep-fancy-tooth-a5zb31u4-pooler.us-east-2.aws.neon.tech:5432/neondb?sslmode=require'
+# 通过 DATABASE_URL 指定（如 PostgreSQL）；未配置时使用本地 SQLite
+BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_SQLITE_URI = 'sqlite:///' + os.path.join(BACKEND_ROOT, 'lingowizz.db').replace('\\', '/')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', DEFAULT_SQLITE_URI)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)# 这一行现在会正确地初始化那个唯一的 db 实例
 '''
@@ -71,14 +78,9 @@ with app.app_context():：激活 Flask 的应用上下文，才能执行数据�
 
 db.create_all()：根据你定义的模型（model），在数据库中创建对应的表。
 '''
-#创建数据库中的部分表
-#app.app_context()
-'''
+# 启动时检查并创建缺失的表（已存在的表不会被改动）
 with app.app_context():
-    print("--- 正在检查并创建数据库表... ---")
     db.create_all()
-    print("--- 数据库表创建完成。 ---")
-'''
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):

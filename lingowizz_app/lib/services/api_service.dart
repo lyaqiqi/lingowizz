@@ -6,8 +6,13 @@ import '../models/vocabulary_item.dart';
 import '../models/conversation.dart';
 
 class ApiService {
-  // 本地开发时使用的基础URL，部署时需要修改为实际服务器地址'http://10.0.2.2:5000/api';
-  static const String baseUrl = 'http://10.0.2.2:5000/api'; // Android模拟器
+  // 后端地址：默认连接本机后端（Android 模拟器中 10.0.2.2 即电脑本机）
+  // 使用线上服务时编译加参数：--dart-define=API_BASE_URL=https://lingowizz-backend-3qbi.onrender.com/api
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:5000/api',
+  );
+  static String get serverBaseUrl => baseUrl.replaceAll('/api', '');
 
   // HTTP客户端配置
   final http.Client _client = http.Client();

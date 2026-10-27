@@ -35,7 +35,7 @@ class ImageRecognitionService:
     
     def __init__(self):
         # 配置API密钥
-        self.zhipu_api_key="482802cba1a144518285e3fb10068f4d.9drwfXmNcnr25cIe"
+        self.zhipu_api_key = os.getenv('ZHIPU_API_KEY')
         # --- 智普AI客户端初始化 ---
         self.zhipu_client = None
         if self.zhipu_api_key and ZhipuAI:
@@ -111,6 +111,34 @@ class ImageRecognitionService:
         except Exception as e:
             print(f"Error in GLM-4V image understanding: {e}")
             return self._get_fallback_understanding()
+
+    def answer_about_image(self, image_path: str, question: str) -> str:
+        """针对图片回答一个具体问题（如某个物体的颜色、位置、用途）"""
+        if not self.zhipu_client:
+            raise RuntimeError("ZhipuAI client is not available")
+        base64_image = self.encode_image_to_base64(image_path)
+        prompt = (
+            "Answer the question about this image in one or two short English sentences. "
+            "Only describe what is actually visible; if it cannot be determined from the image, say so.\n"
+            f"Question: {question}"
+        )
+        response = self.zhipu_client.chat.completions.create(
+            model="glm-4v-flash",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": base64_image}}
+                    ]
+                }
+            ],
+            max_tokens=200,
+            temperature=0.2,
+            stream=False
+        )
+        content = response.choices[0].message.content  # type: ignore
+        return (content or "").strip()
 
     def segment_objects_yolo(self, image_path: str, upload_folder: str) -> List[Dict[str, Any]]:
         if not self.yolo_model:
@@ -235,7 +263,10 @@ class ImageRecognitionService:
             
         return final_identified_objects
         
-    def generate_word_definition_zhipu(self, word: str) -> Dict[str, Any]:
+    def generate_word_definition_zhipu(self, word: str, raise_on_error: bool = False) -> Dict[str, Any]:
+        if raise_on_error:
+            # 不使用兜底释义，失败时直接抛出，由调用方决定如何处理
+            return self._generate_word_definition_strict(word)
         if not self.zhipu_client:
             print("ZhipuAI client is not available. Using fallback for word definition.")
             return self._get_fallback_word_info(word)
@@ -263,6 +294,24 @@ class ImageRecognitionService:
             print(f"Error generating word definition with ZhipuAI: {e}")
             return self._get_fallback_word_info(word)
     
+    def _generate_word_definition_strict(self, word: str) -> Dict[str, Any]:
+        if not self.zhipu_client:
+            raise RuntimeError("ZhipuAI client is not available")
+        response = self.zhipu_client.chat.completions.create(
+            model="glm-4-flash-250414",
+            messages=[{
+                "role": "user",
+                "content": f"Please provide a definition and example sentence for the word '{word}'. Your response MUST be a single, valid JSON object with keys: \"word\", \"definition\", \"example_sentence\", \"pronunciation\", and \"part_of_speech\"."
+            }],
+            response_format={"type": "json_object"},
+            max_tokens=250,
+            stream=False
+        )
+        content = response.choices[0].message.content  # type: ignore
+        if not content:
+            raise RuntimeError("Empty response for word definition")
+        return json.loads(content)
+
     def _get_fallback_understanding(self) -> Dict[str, Any]:
         return { 'description': 'Could not describe the image. It contains various objects for learning.', 'objects': [], 'scene': 'general', 'mood': 'educational' }
     
